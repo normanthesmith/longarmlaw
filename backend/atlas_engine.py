@@ -94,6 +94,14 @@ class ATLASEngine:
 
     def _scan_cycle(self):
         now = datetime.now(timezone.utc)
+    
+        # Only scan during market hours (14:00-21:30 UTC = 9:00-16:30 ET)
+        # Plus 30 min pre-market buffer
+        
+        if not (13, 30) <= (now.hour, now.minute) <= (21, 30):
+            self._log(f"Market closed - next scan at 13:30 UTC")
+        return
+        
         self._log(f"Scan cycle at {now.strftime('%H:%M:%S')} UTC")
 
         account = self.executor.get_account()
