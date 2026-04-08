@@ -1,4 +1,3 @@
-Content is user-generated and unverified.
 """
 ATLAS - Alpaca Execution Layer
 Handles all communication with Alpaca paper trading API.
@@ -84,7 +83,6 @@ class AlpacaExecutor:
             end = datetime.now(timezone.utc)
             hours_back = max(2, (limit * timeframe_minutes) // 60 + 2)
             start = end - timedelta(hours=hours_back)
-
             request = StockBarsRequest(
                 symbol_or_symbols=symbol,
                 timeframe=TimeFrame.Minute,
@@ -94,11 +92,9 @@ class AlpacaExecutor:
                 adjustment="raw",
             )
             bars = self.data_client.get_stock_bars(request)
-
             if symbol not in bars.data or not bars.data[symbol]:
                 logger.warning(f"No bars returned for {symbol}")
                 return pd.DataFrame()
-
             df = pd.DataFrame([
                 {
                     "open": float(b.open),
@@ -111,7 +107,6 @@ class AlpacaExecutor:
                 for b in bars.data[symbol]
             ])
             df.set_index("timestamp", inplace=True)
-
             if timeframe_minutes > 1:
                 df = df.resample(f"{timeframe_minutes}min").agg({
                     "open": "first",
@@ -120,9 +115,7 @@ class AlpacaExecutor:
                     "close": "last",
                     "volume": "sum",
                 }).dropna()
-
             return df.tail(limit)
-
         except Exception as e:
             logger.error(f"get_bars error for {symbol}: {e}")
             return pd.DataFrame()
@@ -208,11 +201,9 @@ class AlpacaExecutor:
         if not self._connected:
             logger.warning(f"Demo mode - would submit {side} {qty} shares of {symbol}")
             return {"id": "DEMO", "symbol": symbol, "qty": qty, "side": side, "status": "DEMO"}
-
         if not risk_check_result.get("approved"):
             logger.error(f"Order blocked by risk manager: {risk_check_result.get('rejection_reason')}")
             return None
-
         try:
             order_side = OrderSide.BUY if side == "LONG" else OrderSide.SELL
             request = MarketOrderRequest(
@@ -273,11 +264,10 @@ class AlpacaExecutor:
         }
 
     def _generate_demo_bars(self, symbol, limit=100):
-        import numpy as np
+        import random
         prices = {"SPY": 500, "QQQ": 430, "AAPL": 185, "NVDA": 800,
                   "BTCUSD": 80000, "ETHUSD": 3000, "DEFAULT": 100}
         base = prices.get(symbol, prices["DEFAULT"])
-        import random
         random.seed(hash(symbol) % 1000)
         closes = [base]
         for _ in range(limit):
